@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 
+using SQLite.Net.Attributes;
+
 namespace StackCache
 {
 	public class AnswerInfo : INotifyPropertyChanged
@@ -14,6 +16,7 @@ namespace StackCache
 		{
 		}
 
+		[PrimaryKey]
 		public int AnswerID {
 			get { return answerId; }
 			set {
@@ -40,7 +43,21 @@ namespace StackCache
 				if(answerBody != value) {
 					answerBody = value;
 					OnPropertyChanged ("AnswerBody");
+					OnPropertyChanged ("LoadedFromText");
 				}
+			}
+		}
+
+		[Ignore]
+		public bool LoadedFromWeb {
+			get;
+			set;
+		}
+
+		[Ignore]
+		public string LoadedFromText {
+			get {
+				return LoadedFromWeb ? "Loaded From Web" : "Loaded From Database";
 			}
 		}
 

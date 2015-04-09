@@ -5,8 +5,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.IO;
 using System.IO.Compression;
+using System.Text;
 
 using Newtonsoft.Json;
+using Connectivity.Plugin;
 
 namespace StackCache
 {
@@ -21,13 +23,16 @@ namespace StackCache
 
 		public async Task<IList<QuestionInfo>> GetQuestions ()
 		{
+			if (!CrossConnectivity.Current.IsConnected)
+				throw new NoInternetException ();
+
 			var decompressedContent = await this.CallAndDecompress (QUESTION_URL);
 			var deserializedContent = JsonConvert.DeserializeObject<QuestionResponse> (decompressedContent);
 
 			var questions = new List<QuestionInfo> ();
 
 			foreach (var item in deserializedContent.items) {
-				var qi = new QuestionInfo { QuestionID = item.question_id, Title = item.title };
+				var qi = new QuestionInfo { QuestionID = item.question_id, Title = item.title, LoadedFromWeb = true };
 
 				questions.Add (qi);
 			}
@@ -38,6 +43,9 @@ namespace StackCache
 
 		public async Task<AnswerInfo> GetAnswerForQuestion(int questionId)
 		{
+			if (!CrossConnectivity.Current.IsConnected)
+				throw new NoInternetException ();
+
 			var decompressedContent = await this.CallAndDecompress (string.Format (ANSWER_URL, questionId));
 			var deserializedContent = JsonConvert.DeserializeObject<AnswerResponse> (decompressedContent);
 
@@ -49,11 +57,43 @@ namespace StackCache
 				theAnswer = new AnswerInfo {
 					AnswerID = currAnswer.answer_id,
 					QuestionID = currAnswer.question_id,
-					AnswerBody = currAnswer.body
+					AnswerBody = currAnswer.body,
+					LoadedFromWeb = true
 				};						
 			}
 
 			return theAnswer;
+		}
+
+		public async Task<IList<AnswerInfo>>GetAnswersForManyQuestions(List<int> questionIds)
+		{
+			if (!CrossConnectivity.Current.IsConnected)
+				throw new NoInternetException();
+
+			StringBuilder semiDelimQuestionIds = new StringBuilder();
+
+			foreach (var item in questionIds) {
+				semiDelimQuestionIds.AppendFormat("{0};",item);
+			}
+
+			semiDelimQuestionIds.Remove (semiDelimQuestionIds.Length - 1, 1);
+
+			var decompressedContent = await this.CallAndDecompress (string.Format (ANSWER_URL, semiDelimQuestionIds));
+			var deserializedContent = JsonConvert.DeserializeObject<AnswerResponse> (decompressedContent);
+
+			List<AnswerInfo> allAnswers = new List<AnswerInfo>();
+
+			if (deserializedContent != null && deserializedContent.items != null && deserializedContent.items.Count > 0) {
+				foreach (var currAnswer in deserializedContent.items) {
+					allAnswers.Add( new AnswerInfo { 
+						AnswerID = currAnswer.answer_id,
+						QuestionID = currAnswer.question_id,
+						AnswerBody = currAnswer.body
+					});
+				}
+			}
+
+			return allAnswers;
 		}
 
 		private async Task<string> CallAndDecompress (string url)

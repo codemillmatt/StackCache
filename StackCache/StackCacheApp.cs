@@ -11,6 +11,20 @@ namespace StackCache
 			set;
 		}
 
+		static StackDataManager _dataMgr;
+
+		public static void SetPlatform(IPlatform osPlatform)
+		{
+			_dataMgr = new StackDataManager (osPlatform);
+		}
+
+		public static StackDataManager StackDataManager 
+		{
+			get { 
+				return _dataMgr;
+			}
+		}
+
 		public App ()
 		{
 			// The root page of your application

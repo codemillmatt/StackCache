@@ -18,6 +18,8 @@ namespace StackCache.Droid
 			base.OnCreate (bundle);
 
 			App.PlatformDecompression = new DecompressDroid ();
+			App.SetPlatform (new AndroidDataPlatform ());
+			App.StackDataManager.Database.SetupDatabaseAsync ();
 
 			global::Xamarin.Forms.Forms.Init (this, bundle);
 

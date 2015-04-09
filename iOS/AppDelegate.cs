@@ -15,6 +15,8 @@ namespace StackCache.iOS
 			global::Xamarin.Forms.Forms.Init ();
 
 			App.PlatformDecompression = new DecompressIOS ();
+			App.SetPlatform (new iOSDataPlatform ());
+			App.StackDataManager.Database.SetupDatabaseAsync();
 
 			LoadApplication (new App ());
 

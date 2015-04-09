@@ -6,8 +6,8 @@ namespace StackCache
 {
 	public interface IPlatform 
 	{
-		string DBPath { get; set; }
-		ISQLitePlatform OSPlatform { get; set; }
+		string DBPath { get; }
+		ISQLitePlatform OSPlatform { get; }
 	}
 }
 

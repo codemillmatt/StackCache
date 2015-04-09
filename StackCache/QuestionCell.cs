@@ -11,7 +11,7 @@ namespace StackCache
 		public QuestionCell ()
 		{
 			title = new Label { YAlign = TextAlignment.Center };
-			title.SetBinding (Label.TextProperty, "Title");
+			title.SetBinding (Label.TextProperty, new Binding("TitleWithLoadFrom"));
 
 			layout = new StackLayout {
 				Orientation = StackOrientation.Vertical,
@@ -19,6 +19,7 @@ namespace StackCache
 				HorizontalOptions = LayoutOptions.StartAndExpand,
 				Children = { title }
 			};
+					
 													
 			View = layout;
 		}
