@@ -47,52 +47,52 @@ namespace StackCache
 			});
 		}
 
-protected async Task LoadQuestions ()
-{
-	_displayQuestions.Clear ();
+		protected async Task LoadQuestions ()
+		{
+			_displayQuestions.Clear ();
 
-	// 1. Get rid of anything too old for the cache
-	await App.StackDataManager.Database.DeleteQuestionsAndAnswers();
+			// 1. Get rid of anything too old for the cache
+			await App.StackDataManager.Database.DeleteQuestionsAndAnswers ();
 
-	// 2. Load up cached questions from the database
-	var databaseQuestions = await App.StackDataManager.Database.GetQuestions ();
+			// 2. Load up cached questions from the database
+			var databaseQuestions = await App.StackDataManager.Database.GetQuestions ();
 
-	foreach (var item in databaseQuestions) {
-		_displayQuestions.Add (item);
-	}
+			foreach (var item in databaseQuestions) {
+				_displayQuestions.Add (item);
+			}
 
-	try {
-		// 4. Load up new questions from web
-		var questionAPI = new StackOverflowService ();
-		var downloadedQuestions = await questionAPI.GetQuestions ();
-		var newQuestionIDs = new List<int>();
+			try {
+				// 4. Load up new questions from web
+				var questionAPI = new StackOverflowService ();
+				var downloadedQuestions = await questionAPI.GetQuestions ();
+				var newQuestionIDs = new List<int> ();
 
-		foreach (var question in downloadedQuestions) {
-			if (_displayQuestions.Contains (question) == false) {
-				_displayQuestions.Insert (0, question);
-				newQuestionIDs.Add(question.QuestionID);
+				foreach (var question in downloadedQuestions) {
+					if (_displayQuestions.Contains (question) == false) {
+						_displayQuestions.Insert (0, question);
+						newQuestionIDs.Add (question.QuestionID);
+					}
+				}
+
+				await App.StackDataManager.Database.SaveQuestions (downloadedQuestions);
+
+				if (newQuestionIDs.Count > 0)
+					await GrabAnswers (newQuestionIDs);
+
+			} catch (NoInternetException) {
+				await HandleException ();
 			}
 		}
 
-		await App.StackDataManager.Database.SaveQuestions (downloadedQuestions);
+		// 5. Proactively grab the answer for the questions
+		protected async Task GrabAnswers (List<int> questionIDs)
+		{			
+			var soAPI = new StackOverflowService ();
 
-		if (newQuestionIDs.Count > 0)
-			await GrabAnswers(newQuestionIDs);
+			var lotsOfAnswers = await soAPI.GetAnswersForManyQuestions (questionIDs);
 
-	} catch (NoInternetException) {
-		await HandleException ();
-	}
-}
-
-// 5. Proactively grab the answer for the questions
-protected async Task GrabAnswers(List<int> questionIDs)
-{			
-	var soAPI = new StackOverflowService ();
-
-	var lotsOfAnswers = await soAPI.GetAnswersForManyQuestions (questionIDs);
-
-	await App.StackDataManager.Database.SaveAnswers (lotsOfAnswers);
-}
+			await App.StackDataManager.Database.SaveAnswers (lotsOfAnswers);
+		}
 
 		protected virtual async Task HandleException ()
 		{
