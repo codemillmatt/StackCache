@@ -38,14 +38,37 @@ namespace StackCache
 			.Where (qi => qi.QuestionID == questionId)
 			.FirstOrDefaultAsync ().ConfigureAwait (false);
 
-				if (dbRecord == null)
+				if (dbRecord == null) {
+					item.InsertDate = DateTime.Now;
 					await InsertAsync (item).ConfigureAwait (false);
-				else
+				} else {
+					item.InsertDate = dbRecord.InsertDate;
 					await UpdateAsync (item).ConfigureAwait (false);
+				}
 			}
 		}
 
-		public async Task SaveAnswers(IList<AnswerInfo> answers)
+		public async Task DeleteQuestionsAndAnswers ()
+		{
+			DateTime cutOff = DateTime.Now.AddMinutes (-2);
+
+			var oldQuestions = await Table<QuestionInfo> ().Where (qi => qi.InsertDate < cutOff).ToListAsync ().ConfigureAwait (false);
+
+			foreach (var item in oldQuestions) {
+				var questionId = item.QuestionID;
+
+				var oldAnswers = await Table<AnswerInfo> ().Where (ai => ai.QuestionID == questionId).ToListAsync ().ConfigureAwait (false);
+
+				foreach (var oa in oldAnswers) {
+					var answerId = oa.AnswerID;
+					await DeleteAsync<AnswerInfo> (answerId);
+				}
+
+				await DeleteAsync<QuestionInfo> (questionId);
+			}
+		}
+
+		public async Task SaveAnswers (IList<AnswerInfo> answers)
 		{
 			foreach (var item in answers) {
 				int answerId = item.AnswerID;

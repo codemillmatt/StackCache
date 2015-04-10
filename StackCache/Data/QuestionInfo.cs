@@ -21,6 +21,11 @@ namespace StackCache
 			set;
 		}
 
+		public DateTime InsertDate {
+			get;
+			set;
+		}
+
 		[Ignore]
 		public bool LoadedFromWeb {
 			get;

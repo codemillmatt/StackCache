@@ -11,7 +11,6 @@ namespace StackCache
 	{
 		WebView _theFullAnswer;
 		AnswerInfo _theAnswer;
-		Label _label;
 
 		public QuestionDetailPage (int questionId)
 		{									
