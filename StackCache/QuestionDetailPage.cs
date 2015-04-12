@@ -48,36 +48,36 @@ namespace StackCache
 
 		}
 
-		protected async Task LoadAnswers (int questionId)
-		{	
-			AnswerInfo currentAnswer = null;
+protected async Task LoadAnswers (int questionId)
+{	
+	AnswerInfo currentAnswer = null;
 
-			// 1. Load from the database
-			currentAnswer = await App.StackDataManager.Database.GetAnswerForQuestion (questionId);
+	// 1. Load from the database
+	currentAnswer = await App.StackDataManager.Database.GetAnswerForQuestion (questionId);
 
-			if (currentAnswer != null) {
-				_theAnswer.AnswerID = currentAnswer.AnswerID;
-				_theAnswer.QuestionID = currentAnswer.QuestionID;
-				_theAnswer.AnswerBody = currentAnswer.AnswerBody;
-			} else {
-				// 2. No database record... Load answer from the web			
-				var answerAPI = new StackOverflowService ();
-	
-				var downloadedAnswer = await answerAPI.GetAnswerForQuestion (questionId);
+	if (currentAnswer != null) {
+		_theAnswer.AnswerID = currentAnswer.AnswerID;
+		_theAnswer.QuestionID = currentAnswer.QuestionID;
+		_theAnswer.AnswerBody = currentAnswer.AnswerBody;
+	} else {
+		// 2. No database record... Load answer from the web			
+		var answerAPI = new StackOverflowService ();
 
-				if (downloadedAnswer != null) {				
-					_theAnswer.AnswerID = downloadedAnswer.AnswerID;
-					_theAnswer.QuestionID = downloadedAnswer.QuestionID;
-					_theAnswer.AnswerBody = downloadedAnswer.AnswerBody;
+		var downloadedAnswer = await answerAPI.GetAnswerForQuestion (questionId);
 
-					// 3. Save the answer for next time
-					await App.StackDataManager.Database.SaveAnswer (_theAnswer);
+		if (downloadedAnswer != null) {				
+			_theAnswer.AnswerID = downloadedAnswer.AnswerID;
+			_theAnswer.QuestionID = downloadedAnswer.QuestionID;
+			_theAnswer.AnswerBody = downloadedAnswer.AnswerBody;
 
-				} else {					
-					_theAnswer.AnswerBody = "No answer found";
-				}
-			}
+			// 3. Save the answer for next time
+			await App.StackDataManager.Database.SaveAnswer (_theAnswer);
+
+		} else {					
+			_theAnswer.AnswerBody = "No answer found";
 		}
+	}
+}
 	}
 }
 

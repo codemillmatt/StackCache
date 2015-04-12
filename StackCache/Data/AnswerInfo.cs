@@ -29,7 +29,7 @@ namespace StackCache
 
 		public int QuestionID {
 			get { return questionid; }
-			set{
+			set {
 				if (questionid != value) {
 					questionid = value;
 					OnPropertyChanged ("QuestionID");
@@ -39,8 +39,8 @@ namespace StackCache
 
 		public string AnswerBody {
 			get { return answerBody; }
-			set{
-				if(answerBody != value) {
+			set {
+				if (answerBody != value) {
 					answerBody = value;
 					OnPropertyChanged ("AnswerBody");
 					OnPropertyChanged ("LoadedFromText");
@@ -61,7 +61,7 @@ namespace StackCache
 			}
 		}
 
-		protected virtual void OnPropertyChanged(string propertyName)
+		protected virtual void OnPropertyChanged (string propertyName)
 		{
 			if (PropertyChanged != null) {
 				PropertyChanged (this, new PropertyChangedEventArgs (propertyName));
