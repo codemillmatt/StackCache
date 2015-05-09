@@ -19,9 +19,14 @@ namespace StackCache
 			await CreateTablesAsync<QuestionInfo, AnswerInfo> ().ConfigureAwait (false);
 		}
 
-		public async Task<IList<QuestionInfo>>GetQuestions ()
+		public async Task<IList<QuestionInfo>>GetQuestions (DateTime dateToDisplay)
 		{
-			return await Table<QuestionInfo> ().ToListAsync ().ConfigureAwait (false);
+			var topDate = dateToDisplay.AddDays (1);
+
+			return await Table<QuestionInfo> ().Where (qi => 
+				qi.InsertDate > dateToDisplay &&
+				qi.InsertDate < topDate
+			).ToListAsync ().ConfigureAwait (false);			
 		}
 
 		public async Task<AnswerInfo>GetAnswerForQuestion (int questionId)
@@ -35,8 +40,8 @@ namespace StackCache
 				int questionId = item.QuestionID;
 
 				var dbRecord = await Table<QuestionInfo> ()
-			.Where (qi => qi.QuestionID == questionId)
-			.FirstOrDefaultAsync ().ConfigureAwait (false);
+					.Where (qi => qi.QuestionID == questionId)
+					.FirstOrDefaultAsync ().ConfigureAwait (false);
 
 				if (dbRecord == null) {
 					item.InsertDate = DateTime.Now;
@@ -50,7 +55,7 @@ namespace StackCache
 
 		public async Task DeleteQuestionsAndAnswers ()
 		{
-			DateTime cutOff = DateTime.Now.AddMinutes (-2);
+			DateTime cutOff = DateTime.Now.AddDays (-7);
 
 			var oldQuestions = await Table<QuestionInfo> ().Where (qi => qi.InsertDate < cutOff).ToListAsync ().ConfigureAwait (false);
 

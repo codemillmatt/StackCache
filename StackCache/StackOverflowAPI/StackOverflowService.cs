@@ -18,21 +18,33 @@ namespace StackCache
 		{
 		}
 
-		private const string QUESTION_URL = "https://api.stackexchange.com/2.2/search?order=desc&sort=activity&tagged=xamarin&site=stackoverflow";
+		private const string QUESTION_URL = "https://api.stackexchange.com/2.2/search?fromdate={0}&todate={1}&order=desc&sort=activity&tagged=xamarin&site=stackoverflow";
 		private const string ANSWER_URL = "https://api.stackexchange.com/2.2/questions/{0}/answers?order=desc&sort=activity&site=stackoverflow&filter=!-04siDnHf2zL";
 
-		public async Task<IList<QuestionInfo>> GetQuestions ()
-		{
+		public async Task<IList<QuestionInfo>> GetQuestions (DateTime dateToDisplay)
+		{			
 			if (!CrossConnectivity.Current.IsConnected)
 				throw new NoInternetException ();
 
-			var decompressedContent = await this.CallAndDecompress (QUESTION_URL);
+			// calculate the from date as 7 days back if none passed in
+			var fromDate = (int)(dateToDisplay.ToUniversalTime() - new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+			var toDate = (int)(dateToDisplay.AddDays(1).ToUniversalTime() - new DateTime (1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
+
+			var urlToCall = string.Format (QUESTION_URL, fromDate, toDate);
+
+			var decompressedContent = await this.CallAndDecompress (urlToCall);
 			var deserializedContent = JsonConvert.DeserializeObject<QuestionResponse> (decompressedContent);
 
 			var questions = new List<QuestionInfo> ();
 
 			foreach (var item in deserializedContent.items) {
-				var qi = new QuestionInfo { QuestionID = item.question_id, Title = item.title, LoadedFromWeb = true };
+				var qi = new QuestionInfo { 
+					QuestionID = item.question_id, 
+					Title = item.title, 
+					InsertDate = DateTime.Now,
+					UnixCreationDate = item.creation_date,
+					IsAnswered = item.is_answered,
+					LoadedFromWeb = true };
 
 				questions.Add (qi);
 			}

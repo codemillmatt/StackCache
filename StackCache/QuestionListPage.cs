@@ -11,10 +11,14 @@ namespace StackCache
 	{
 		ListView _questionsListView;
 		ObservableCollection<QuestionInfo> _displayQuestions;
+		DateTime _dateToDisplay;
 
-		public QuestionListPage ()
+		bool _initialDisplay = true;
+
+		public QuestionListPage (DateTime dateToDisplay)
 		{
 			Title = "Xamarin Questions";
+			_dateToDisplay = dateToDisplay;
 
 			_displayQuestions = new ObservableCollection<QuestionInfo> ();
 
@@ -31,8 +35,6 @@ namespace StackCache
 				var questionInfo = e.Item as QuestionInfo;
 				var newPage = new QuestionDetailPage (questionInfo.QuestionID);						
 				await Navigation.PushAsync (newPage);
-
-				//((ListView)sender).SelectedItem = null;
 			};
 						
 			Content = new StackLayout { 
@@ -41,10 +43,17 @@ namespace StackCache
 					_questionsListView
 				}
 			};
+					
+		}
 
-			Task.Run (async () => {
+		protected async override void OnAppearing ()
+		{
+			base.OnAppearing ();
+
+			if (_initialDisplay) {
 				await LoadQuestions ();
-			});
+				_initialDisplay = false;
+			}
 		}
 
 		protected async Task LoadQuestions ()
@@ -55,7 +64,7 @@ namespace StackCache
 			await App.StackDataManager.Database.DeleteQuestionsAndAnswers ();
 
 			// 2. Load up cached questions from the database
-			var databaseQuestions = await App.StackDataManager.Database.GetQuestions ();
+			var databaseQuestions = await App.StackDataManager.Database.GetQuestions (_dateToDisplay);
 
 			foreach (var item in databaseQuestions) {
 				_displayQuestions.Add (item);
@@ -64,20 +73,20 @@ namespace StackCache
 			try {
 				// 4. Load up new questions from web
 				var questionAPI = new StackOverflowService ();
-				var downloadedQuestions = await questionAPI.GetQuestions ();
-				var newQuestionIDs = new List<int> ();
+				var downloadedQuestions = await questionAPI.GetQuestions (_dateToDisplay);
 
+				List<QuestionInfo> newQuestions = new List<QuestionInfo>();
 				foreach (var question in downloadedQuestions) {
 					if (_displayQuestions.Contains (question) == false) {
 						_displayQuestions.Insert (0, question);
-						newQuestionIDs.Add (question.QuestionID);
+						newQuestions.Add(question);
 					}
 				}
 
-				await App.StackDataManager.Database.SaveQuestions (downloadedQuestions);
+				await App.StackDataManager.Database.SaveQuestions (newQuestions);
 
-				if (newQuestionIDs.Count > 0)
-					await GrabAnswers (newQuestionIDs);
+				if (newQuestions.Count > 0)
+					await GrabAnswers (newQuestions);
 
 			} catch (NoInternetException) {
 				await HandleException ();
@@ -85,11 +94,17 @@ namespace StackCache
 		}
 
 		// 5. Proactively grab the answer for the questions
-		protected async Task GrabAnswers (List<int> questionIDs)
+		protected async Task GrabAnswers (List<QuestionInfo> questions)
 		{			
+			var questionsIds = new List<int> ();
+
+			foreach (var item in questions) {
+				questionsIds.Add (item.QuestionID);
+			}
+
 			var soAPI = new StackOverflowService ();
 
-			var lotsOfAnswers = await soAPI.GetAnswersForManyQuestions (questionIDs);
+			var lotsOfAnswers = await soAPI.GetAnswersForManyQuestions (questionsIds);
 
 			await App.StackDataManager.Database.SaveAnswers (lotsOfAnswers);
 		}

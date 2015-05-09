@@ -32,13 +32,20 @@ namespace StackCache
 			set;
 		}	
 
+		public int UnixCreationDate {
+			get;
+			set;
+		}
+
+		public bool IsAnswered {
+			get;
+			set;
+		}
+
 		[Ignore]
 		public string TitleWithLoadFrom {
 			get {
-				if (LoadedFromWeb)
-					return "W - " + this.Title;
-				else
-					return "D - " + this.Title;
+				return this.Title + " " + this.InsertDate.ToString ("s");
 			}
 		}
 

@@ -22,13 +22,11 @@ namespace StackCache
 				MinimumHeightRequest = 50, 
 				XAlign = TextAlignment.Center
 			};
-			loadedFromLabel.BindingContext = _theAnswer;
-			loadedFromLabel.SetBinding (Label.TextProperty, new Binding ("LoadedFromText"));
 				
 			HtmlWebViewSource webSource = new HtmlWebViewSource ();
 
 			webSource.BindingContext = _theAnswer;
-			webSource.SetBinding (HtmlWebViewSource.HtmlProperty, new Binding("AnswerBody"));
+			webSource.SetBinding (HtmlWebViewSource.HtmlProperty, new Binding ("AnswerBody"));
 		
 			_theFullAnswer = new WebView { 
 				Source = webSource,
@@ -38,7 +36,7 @@ namespace StackCache
 			Content = new StackLayout { 
 				VerticalOptions = LayoutOptions.FillAndExpand,
 				Children = {
-					loadedFromLabel, _theFullAnswer
+					_theFullAnswer
 				}
 			};
 					
@@ -48,36 +46,36 @@ namespace StackCache
 
 		}
 
-protected async Task LoadAnswers (int questionId)
-{	
-	AnswerInfo currentAnswer = null;
+		protected async Task LoadAnswers (int questionId)
+		{	
+			AnswerInfo currentAnswer = null;
 
-	// 1. Load from the database
-	currentAnswer = await App.StackDataManager.Database.GetAnswerForQuestion (questionId);
+			// 1. Load from the database
+			currentAnswer = await App.StackDataManager.Database.GetAnswerForQuestion (questionId);
 
-	if (currentAnswer != null) {
-		_theAnswer.AnswerID = currentAnswer.AnswerID;
-		_theAnswer.QuestionID = currentAnswer.QuestionID;
-		_theAnswer.AnswerBody = currentAnswer.AnswerBody;
-	} else {
-		// 2. No database record... Load answer from the web			
-		var answerAPI = new StackOverflowService ();
+			if (currentAnswer != null) {
+				_theAnswer.AnswerID = currentAnswer.AnswerID;
+				_theAnswer.QuestionID = currentAnswer.QuestionID;
+				_theAnswer.AnswerBody = currentAnswer.AnswerBody;
+			} else {
+				// 2. No database record... Load answer from the web			
+				var answerAPI = new StackOverflowService ();
 
-		var downloadedAnswer = await answerAPI.GetAnswerForQuestion (questionId);
+				var downloadedAnswer = await answerAPI.GetAnswerForQuestion (questionId);
 
-		if (downloadedAnswer != null) {				
-			_theAnswer.AnswerID = downloadedAnswer.AnswerID;
-			_theAnswer.QuestionID = downloadedAnswer.QuestionID;
-			_theAnswer.AnswerBody = downloadedAnswer.AnswerBody;
+				if (downloadedAnswer != null) {				
+					_theAnswer.AnswerID = downloadedAnswer.AnswerID;
+					_theAnswer.QuestionID = downloadedAnswer.QuestionID;
+					_theAnswer.AnswerBody = downloadedAnswer.AnswerBody;
 
-			// 3. Save the answer for next time
-			await App.StackDataManager.Database.SaveAnswer (_theAnswer);
+					// 3. Save the answer for next time
+					await App.StackDataManager.Database.SaveAnswer (_theAnswer);
 
-		} else {					
-			_theAnswer.AnswerBody = "No answer found";
+				} else {					
+					_theAnswer.AnswerBody = "No answer found";
+				}
+			}
 		}
-	}
-}
 	}
 }
 
