@@ -75,40 +75,21 @@ namespace StackCache
 				var questionAPI = new StackOverflowService ();
 				var downloadedQuestions = await questionAPI.GetQuestions (_dateToDisplay);
 
-				List<QuestionInfo> newQuestions = new List<QuestionInfo>();
+				// 5. See which questions are new from web and only add those to the display and cache
 				foreach (var question in downloadedQuestions) {
 					if (_displayQuestions.Contains (question) == false) {
 						_displayQuestions.Insert (0, question);
-						newQuestions.Add(question);
+
+						// 6. Save the new question to the cache
+						await App.StackDataManager.Database.SaveQuestion(question);
 					}
 				}
-
-				await App.StackDataManager.Database.SaveQuestions (newQuestions);
-
-				if (newQuestions.Count > 0)
-					await GrabAnswers (newQuestions);
-
+					
 			} catch (NoInternetException) {
 				await HandleException ();
 			}
 		}
-
-		// 5. Proactively grab the answer for the questions
-		protected async Task GrabAnswers (List<QuestionInfo> questions)
-		{			
-			var questionsIds = new List<int> ();
-
-			foreach (var item in questions) {
-				questionsIds.Add (item.QuestionID);
-			}
-
-			var soAPI = new StackOverflowService ();
-
-			var lotsOfAnswers = await soAPI.GetAnswersForManyQuestions (questionsIds);
-
-			await App.StackDataManager.Database.SaveAnswers (lotsOfAnswers);
-		}
-
+			
 		protected virtual async Task HandleException ()
 		{
 		}

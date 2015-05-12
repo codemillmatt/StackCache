@@ -34,6 +34,23 @@ namespace StackCache
 			return await Table<AnswerInfo> ().Where (ai => ai.QuestionID == questionId).FirstOrDefaultAsync ().ConfigureAwait (false);
 		}
 
+		public async Task SaveQuestion(QuestionInfo question)
+		{
+			int questionId = question.QuestionID;
+
+			var dbRecord = await Table<QuestionInfo> ()
+				.Where (qi => qi.QuestionID == questionId)
+				.FirstOrDefaultAsync ().ConfigureAwait (false);
+
+			if (dbRecord == null) {
+				question.InsertDate = DateTime.Now;
+				await InsertAsync (question).ConfigureAwait (false);
+			} else {
+				question.InsertDate = dbRecord.InsertDate;
+				await UpdateAsync (question).ConfigureAwait (false);
+			}
+		}
+
 		public async Task SaveQuestions (IList<QuestionInfo> questions)
 		{
 			foreach (var item in questions) {
