@@ -24,8 +24,8 @@ namespace StackCache
 			var topDate = dateToDisplay.AddDays (1);
 
 			return await Table<QuestionInfo> ().Where (qi => 
-				qi.InsertDate > dateToDisplay &&
-				qi.InsertDate < topDate
+		qi.InsertDate > dateToDisplay &&
+			qi.InsertDate < topDate
 			).ToListAsync ().ConfigureAwait (false);			
 		}
 
@@ -34,7 +34,7 @@ namespace StackCache
 			return await Table<AnswerInfo> ().Where (ai => ai.QuestionID == questionId).FirstOrDefaultAsync ().ConfigureAwait (false);
 		}
 
-		public async Task SaveQuestion(QuestionInfo question)
+		public async Task SaveQuestion (QuestionInfo question)
 		{
 			int questionId = question.QuestionID;
 
@@ -48,25 +48,6 @@ namespace StackCache
 			} else {
 				question.InsertDate = dbRecord.InsertDate;
 				await UpdateAsync (question).ConfigureAwait (false);
-			}
-		}
-
-		public async Task SaveQuestions (IList<QuestionInfo> questions)
-		{
-			foreach (var item in questions) {
-				int questionId = item.QuestionID;
-
-				var dbRecord = await Table<QuestionInfo> ()
-					.Where (qi => qi.QuestionID == questionId)
-					.FirstOrDefaultAsync ().ConfigureAwait (false);
-
-				if (dbRecord == null) {
-					item.InsertDate = DateTime.Now;
-					await InsertAsync (item).ConfigureAwait (false);
-				} else {
-					item.InsertDate = dbRecord.InsertDate;
-					await UpdateAsync (item).ConfigureAwait (false);
-				}
 			}
 		}
 
@@ -87,20 +68,6 @@ namespace StackCache
 				}
 
 				await DeleteAsync<QuestionInfo> (questionId);
-			}
-		}
-
-		public async Task SaveAnswers (IList<AnswerInfo> answers)
-		{
-			foreach (var item in answers) {
-				int answerId = item.AnswerID;
-
-				var dbRecord = await Table<AnswerInfo> ().Where (ai => ai.AnswerID == answerId).FirstOrDefaultAsync ().ConfigureAwait (false);
-
-				if (dbRecord == null)
-					await InsertAsync (item).ConfigureAwait (false);
-				else
-					await UpdateAsync (item).ConfigureAwait (false);
 			}
 		}
 

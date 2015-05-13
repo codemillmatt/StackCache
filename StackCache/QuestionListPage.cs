@@ -81,15 +81,15 @@ namespace StackCache
 						_displayQuestions.Insert (0, question);
 
 						// 6. Save the new question to the cache
-						await App.StackDataManager.Database.SaveQuestion(question);
+						await App.StackDataManager.Database.SaveQuestion (question);
 					}
 				}
-					
+
 			} catch (NoInternetException) {
 				await HandleException ();
 			}
 		}
-			
+
 		protected virtual async Task HandleException ()
 		{
 		}

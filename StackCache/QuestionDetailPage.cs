@@ -41,12 +41,12 @@ namespace StackCache
 			};
 					
 			Task.Run (async () => {
-				await LoadAnswers (questionId);
+				await LoadAnswer (questionId);
 			});
 
 		}
 
-		protected async Task LoadAnswers (int questionId)
+		protected async Task LoadAnswer (int questionId)
 		{	
 			AnswerInfo currentAnswer = null;
 
